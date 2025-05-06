@@ -1,6 +1,7 @@
 package application
 
 import (
+	"context"
 	"github.com/BiathlonRaceProto-Yadro/internal/domain/models"
 	"log/slog"
 )
@@ -48,7 +49,9 @@ func NewApp(
 
 func (a *App) Run(configPath, eventsPath string, fullOutput bool) (string, error) {
 	// Загрузка конфигурации
-	a.logger.Debug("Loading configuration", "path", configPath)
+	if a.logger.Enabled(context.Background(), slog.LevelDebug) {
+		a.logger.Debug("Loading configuration", "path", configPath)
+	}
 	config, err := a.configLoader.LoadConfig(configPath)
 	if err != nil {
 		a.logger.Error("Failed to load config", "path", configPath, "error", err)
@@ -59,7 +62,9 @@ func (a *App) Run(configPath, eventsPath string, fullOutput bool) (string, error
 	a.eventProcessor = NewEventProcessor(config, a.logger)
 
 	// Парсинг событий
-	a.logger.Debug("Parsing events", "path", eventsPath)
+	if a.logger.Enabled(context.Background(), slog.LevelDebug) {
+		a.logger.Debug("Parsing events", "path", eventsPath)
+	}
 	events, err := a.eventParser.ParseEvents(eventsPath)
 	if err != nil {
 		a.logger.Error("Failed to read events", "path", eventsPath, "error", err)
@@ -67,7 +72,9 @@ func (a *App) Run(configPath, eventsPath string, fullOutput bool) (string, error
 	}
 
 	// Обработка событий
-	a.logger.Debug("Processing events", "count", len(events))
+	if a.logger.Enabled(context.Background(), slog.LevelDebug) {
+		a.logger.Debug("Processing events", "count", len(events))
+	}
 	for _, event := range events {
 		if err := a.eventProcessor.HandleEvent(event); err != nil {
 			a.logger.Error("Event processing failed",

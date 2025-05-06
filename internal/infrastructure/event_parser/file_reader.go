@@ -17,7 +17,11 @@ func (r *FileReader) ReadLines(path string) ([]string, error) {
 	if err != nil {
 		return nil, fmt.Errorf("error opening events file: %w", err)
 	}
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			_ = err
+		}
+	}()
 
 	var lines []string
 	scanner := bufio.NewScanner(file)

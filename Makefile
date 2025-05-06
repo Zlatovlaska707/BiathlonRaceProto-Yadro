@@ -11,9 +11,9 @@ EVENTS_NAME := events
 LINTER = golangci-lint
 LINTER_FLAGS = run
 
-.PHONY: all lint build run clean setup-dirs copy-resources deps
+.PHONY: all lint build run run-fullOutput clean setup-dirs copy-resources deps
 
-all: run
+all: run-fullOutput
 
 lint:
 	$(LINTER) $(LINTER_FLAGS)
@@ -25,6 +25,10 @@ build:
 run: build
 	@echo "Запуск приложения в minimal версии..."
 	$(MAIN_DIR)$(BINARY_NAME) $(CONFIG_DIR)$(CONFIG_NAME) $(EVENTS_DIR)$(EVENTS_NAME)
+
+run-fullOutput: build
+	@echo "Запуск приложения в full версии..."
+	$(MAIN_DIR)$(BINARY_NAME) -fullOutput $(CONFIG_DIR)$(CONFIG_NAME) $(EVENTS_DIR)$(EVENTS_NAME)
 
 clean:
 	@echo "Очистка артефактов..."

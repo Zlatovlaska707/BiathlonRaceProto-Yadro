@@ -26,10 +26,18 @@ func ParseDuration(durationStr string) (time.Duration, error) {
 
 	var h, m, s time.Duration
 	_, err := fmt.Sscanf(parts[0], "%d", &h)
+	if err != nil {
+		return 0, fmt.Errorf("failed to parse hours: %w", err)
+	}
+
 	_, err = fmt.Sscanf(parts[1], "%d", &m)
+	if err != nil {
+		return 0, fmt.Errorf("failed to parse minutes: %w", err)
+	}
+
 	_, err = fmt.Sscanf(parts[2], "%d", &s)
 	if err != nil {
-		return 0, fmt.Errorf("failed to parse duration: %w", err)
+		return 0, fmt.Errorf("failed to parse seconds: %w", err)
 	}
 
 	return h*time.Hour + m*time.Minute + s*time.Second, nil

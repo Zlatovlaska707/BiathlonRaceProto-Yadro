@@ -2,6 +2,7 @@ package models
 
 import (
 	"fmt"
+	"log/slog"
 	"time"
 )
 
@@ -40,6 +41,7 @@ type Competitor struct {
 	Hits, Shots            int
 	DisqualificationReason string
 	FiringLines            []firingSession
+	logger                 *slog.Logger
 }
 
 type firingSession struct {
@@ -50,8 +52,8 @@ type firingSession struct {
 	maxShots  int
 }
 
-func NewCompetitor(id int) *Competitor {
-	return &Competitor{ID: id, Status: Registered}
+func NewCompetitor(id int, logger *slog.Logger) *Competitor {
+	return &Competitor{ID: id, Status: Registered, logger: logger}
 }
 
 var transitions = map[CompetitorStatus][]CompetitorStatus{
@@ -67,6 +69,7 @@ func (c *Competitor) UpdateStatus(next CompetitorStatus) error {
 		c.Status = next
 		return nil
 	}
+
 	allowed := transitions[c.Status]
 	for _, s := range allowed {
 		if s == next {
@@ -74,7 +77,10 @@ func (c *Competitor) UpdateStatus(next CompetitorStatus) error {
 			return nil
 		}
 	}
-	return fmt.Errorf("invalid transition %v -> %v", c.Status, next)
+
+	err := fmt.Errorf("invalid transition %v -> %v", c.Status, next)
+	c.logger.Error("Status transition error", "error", err)
+	return err
 }
 
 func (c *Competitor) SetScheduled(t time.Time) {
@@ -88,8 +94,11 @@ func (c *Competitor) StartNewLap(penal bool, t time.Time) {
 
 func (c *Competitor) FinishCurrentLap(t time.Time) error {
 	if len(c.Laps) == 0 {
-		return fmt.Errorf("no lap in progress")
+		err := fmt.Errorf("no lap in progress")
+		c.logger.Error("Lap completion error", "error", err, "competitorID", c.ID)
+		return err
 	}
+
 	// Ищем последний незавершённый основной круг
 	for i := len(c.Laps) - 1; i >= 0; i-- {
 		lap := &c.Laps[i]
@@ -98,7 +107,9 @@ func (c *Competitor) FinishCurrentLap(t time.Time) error {
 			return nil
 		}
 	}
-	return fmt.Errorf("no unfinished main lap found")
+	err := fmt.Errorf("no unfinished main lap found")
+	c.logger.Error("Failed to finish lap", "error", err, "competitorID", c.ID, "currentLaps", c.Laps)
+	return err
 }
 
 func (c *Competitor) EndPenalty(t time.Time) {
@@ -120,7 +131,7 @@ func (c *Competitor) CompletedMain(total int) bool {
 	return count >= total
 }
 
-func (c *Competitor) Finish(t time.Time) {
+func (c *Competitor) SetFinish(t time.Time) {
 	c.FinishTime = t
 }
 

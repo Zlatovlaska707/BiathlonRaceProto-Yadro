@@ -1,6 +1,7 @@
 package application
 
 import (
+	"context"
 	"fmt"
 	"github.com/BiathlonRaceProto-Yadro/internal/domain/models"
 	"github.com/BiathlonRaceProto-Yadro/pkg/utils"
@@ -27,11 +28,15 @@ func NewReportService(config *models.Config, fullOutput bool, logger *slog.Logge
 
 func (r *ReportService) GenerateReport(competitors []*models.Competitor, _ *models.Config) string {
 	if r.fullOutput {
-		r.logger.Debug("Generating full report", "competitorsCount", len(competitors))
+		if r.logger.Enabled(context.Background(), slog.LevelDebug) {
+			r.logger.Debug("Generating full report", "competitorsCount", len(competitors))
+		}
 		return r.generateFullReport(competitors)
 	}
 
-	r.logger.Debug("Generating short report", "competitorsCount", len(competitors))
+	if r.logger.Enabled(context.Background(), slog.LevelDebug) {
+		r.logger.Debug("Generating short report", "competitorsCount", len(competitors))
+	}
 	return r.generateShortReport(competitors)
 }
 
@@ -101,7 +106,7 @@ func (r *ReportService) generateFullReport(competitors []*models.Competitor) str
 	sort.Slice(competitors, func(i, j int) bool {
 		iTime, jTime := competitors[i].TotalTime(), competitors[j].TotalTime()
 		if iTime == 0 || jTime == 0 {
-			return iTime > jTime // push non-finishers to bottom
+			return iTime > jTime // Опускаем в них тех, кто не финишировал
 		}
 		return iTime < jTime
 	})
@@ -109,8 +114,12 @@ func (r *ReportService) generateFullReport(competitors []*models.Competitor) str
 	var sb strings.Builder
 	sb.WriteString("Final Results:\n")
 	w := tabwriter.NewWriter(&sb, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "ID\tStatus\tTotal Time\tLaps Times\tSpeed Laps\tPenalty Times\tSpeed Penalty\tHits/Shots")
-	fmt.Fprintln(w, "--\t------\t----------\t----------\t----------\t-------------\t-------------\t----------")
+	if _, err := fmt.Fprintln(w, "ID\tStatus\tTotal Time\tLaps Times\tSpeed Laps\tPenalty Times\tSpeed Penalty\tHits/Shots"); err != nil {
+		r.logger.Error("failed to write header", "error", err)
+	}
+	if _, err := fmt.Fprintln(w, "--\t------\t----------\t----------\t----------\t-------------\t-------------\t----------"); err != nil {
+		r.logger.Error("failed to write separator", "error", err)
+	}
 
 	for _, c := range competitors {
 		timeStr := "-"
@@ -136,24 +145,28 @@ func (r *ReportService) generateFullReport(competitors []*models.Competitor) str
 			c.Hits,
 			c.Shots,
 		)
-		fmt.Fprintln(w, row)
+		if _, err := fmt.Fprintln(w, row); err != nil {
+			r.logger.Error("failed to write row", "error", err)
+		}
 	}
 
-	w.Flush()
+	if err := w.Flush(); err != nil {
+		r.logger.Error("failed to flush tabwriter", "error", err)
+	}
 	return sb.String()
 }
 
 func (r *ReportService) getStatusString(c *models.Competitor) string {
-	switch {
+	switch c.Status {
 	//case c.DisqualificationReason == "NotStarted":
 	//	return "NotStarted"
-	case c.Status == models.NotStarted:
+	case models.NotStarted:
 		return "NotStarted"
-	case c.Status == models.NotFinished:
+	case models.NotFinished:
 		return "NotFinished"
-	case c.Status == models.Finished:
+	case models.Finished:
 		return "Finished"
-	case c.Status == models.Disqualified:
+	case models.Disqualified:
 		return "Disqualified"
 	default:
 		return "InProgress"
@@ -161,6 +174,7 @@ func (r *ReportService) getStatusString(c *models.Competitor) string {
 }
 
 // Получения чистых основных кругов
+/*
 func (r *ReportService) formatMainLapsDirtyClean(c *models.Competitor) string {
 	mainLaps := c.MainLaps()
 	penaltyLaps := c.PenaltyLaps()
@@ -199,6 +213,7 @@ func (r *ReportService) formatMainLapsDirtyClean(c *models.Competitor) string {
 
 	return r.formatLaps(adjustedLaps)
 }
+*/
 
 // Получение грязных основных кругов
 func (r *ReportService) formatMainLapsDirty(c *models.Competitor) string {

@@ -57,6 +57,13 @@ func (a *EventAdapter) ParseEvent(
 		if _, err := utils.ParseTime(params[0]); err != nil {
 			return nil, fmt.Errorf("invalid start time parameter: %w", err)
 		}
+	case models.OnFiringRange:
+		if len(params) != 1 {
+			return nil, fmt.Errorf("event 5 requires firing range number")
+		}
+		if _, err := strconv.Atoi(params[0]); err != nil {
+			return nil, fmt.Errorf("invalid firing range number: %w", err)
+		}
 	case models.TargetHit:
 		if len(params) != 1 {
 			return nil, fmt.Errorf("events 6 requires target number")
@@ -64,6 +71,8 @@ func (a *EventAdapter) ParseEvent(
 		if _, err := strconv.Atoi(params[0]); err != nil {
 			return nil, fmt.Errorf("invalid target number: %w", err)
 		}
+	default:
+
 	}
 
 	return models.NewEvent(

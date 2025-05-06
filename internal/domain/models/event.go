@@ -45,18 +45,6 @@ func NewEvent(
 	}
 }
 
-func (e Event) Validate() error {
-	if e.CompetitorID <= 0 {
-		return fmt.Errorf("invalid competitor ID")
-	}
-
-	if e.Time.IsZero() {
-		return fmt.Errorf("events time is required")
-	}
-
-	return nil
-}
-
 func ParseEventType(code int) (EventType, error) {
 	if code < 1 || code > 11 {
 		return 0, fmt.Errorf("invalid events type code")
