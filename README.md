@@ -1,8 +1,11 @@
 Biathlon Competition System Prototype
 ======================================
 
-<p style="text-align: right; color: #00CC00; font-weight: bold;"> >English version</p>
+![biathlon](https://github.com/user-attachments/assets/2b57c0ca-26cf-4f29-98da-cf807dd10045)
 
+$${\color{green}> \space \color{green}English \space \color{green}version}$$
+---:
+<br>
 A prototype system for managing and analyzing biathlon competitions.
 Processes configuration files and events, generates final reports.<br>
 
@@ -147,8 +150,9 @@ Sample _events_ file in `input/events/events`:
    ```
 ____
 
-
-<p style="text-align: right; color: #00CC00; font-weight: bold;"> >Russian version</p>
+$${\color{green}> \space \color{green}Russian \space \color{green}version}$$
+---:
+<br>
 
 Прототип системы для управления и анализа биатлонных соревнований.
 Обрабатывает конфигурационные файлы и события, генерирует итоговые отчеты.<br>
